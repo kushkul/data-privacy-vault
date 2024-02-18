@@ -3,6 +3,9 @@ from flask import jsonify, request, send_file, abort
 from flask import Response
 from flask import Blueprint
 import json
+from .mongo_utils import get_mongo_database
+import datetime
+import uuid
 
 api_bp = Blueprint('api', __name__)
 
@@ -51,6 +54,8 @@ def internal_server_error_route():
 
 @api_bp.route('/tokenize', methods=['POST'])
 def tokenize_info():
+    """
+    """
     content = request.json
     print(content)
 
@@ -64,6 +69,8 @@ def tokenize_info():
 
 @api_bp.route('/detokenize', methods=['POST'])
 def detokenize_info():
+    """
+    """
     content = request.json
     print(content)
 
@@ -78,16 +85,50 @@ def detokenize_info():
 
 
 def tokenize_data(data):
-    # Do some processing
-    return data + 'kk'
+    """
+    """
+    # Encrypt data here
+    token = data + 'kk'
+
+    # Connect to mongo database
+    mongo_database = get_mongo_database()
+    collection_name = mongo_database["data-tokens"]
+    
+    # Save the items to database
+    item_to_save = {
+        "_id" : uuid.uuid4().hex,
+        "value" : data,
+        "token" : token,
+        "added" : datetime.datetime.now()
+    }
+    
+    try:
+        collection_name.insert_one(item_to_save)
+    except Exception as e:
+        print(e)
+
+    return token
 
 
 def detokenize_data(token):
-    # Do some stuff
-    status = True
-    if status:
-        val = token + '_kk'
-    else:
+    """
+    """
+    # Connect to mongo database
+    mongo_database = get_mongo_database()
+    collection_name = mongo_database["data-tokens"]
+
+    status = 'Invalid'
+    value = 'Invalid'
+
+    print('Value to find: {}'.format(token))
+    try:
+        item_details = collection_name.find_one({'token':token})
+        print(item_details)
+        val = item_details['value']
+        status = True
+    except Exception as e:
+        print(e)
+        status = False
         val = ""
 
     return status, val
