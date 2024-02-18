@@ -30,8 +30,8 @@ def handle_exception(error):
     return jsonify({'error':'An unexpected error has occured'}), 500
 
 
-# Routes for producing errors
 
+# Routes for producing errors
 @api_bp.route('/not_found')
 def not_found():
     abort(404)
@@ -51,20 +51,44 @@ def internal_server_error_route():
 
 @api_bp.route('/tokenize', methods=['POST'])
 def tokenize_info():
-    # Receiving name from request
     content = request.json
     print(content)
 
     for key in content['data']:
         val = content['data'][key]
-        val_token = get_token(val)
+        val_token = tokenize_data(val)
         content['data'][key] = val_token
 
     return Response(json.dumps(content), status=201, mimetype='application/json')
 
 
-def get_token(data):
+@api_bp.route('/detokenize', methods=['POST'])
+def detokenize_info():
+    content = request.json
+    print(content)
+
+    for key in content['data']:
+        val_token = content['data'][key]
+        status, val = detokenize_data(val_token)
+
+        content['data'][key] = {'found': status,
+                                'value': val}
+
+    return Response(json.dumps(content), status=201, mimetype='application/json')
+
+
+def tokenize_data(data):
     # Do some processing
     return data + 'kk'
 
+
+def detokenize_data(token):
+    # Do some stuff
+    status = True
+    if status:
+        val = token + '_kk'
+    else:
+        val = ""
+
+    return status, val
 
