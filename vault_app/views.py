@@ -5,7 +5,13 @@ from flask import Blueprint
 import json
 from .mongo_utils import get_mongo_database
 import datetime
+import string
 import uuid
+from ff3 import FF3Cipher
+import traceback
+
+from . import ENCRYPTION_KEY
+from . import TWEAK
 
 api_bp = Blueprint('api', __name__)
 
@@ -57,12 +63,15 @@ def tokenize_info():
     """
     """
     content = request.json
+    try:
+        for key in content['data']:
+            val = content['data'][key]
+            val_token = tokenize_data(val)
+            content['data'][key] = val_token
+    except Exception as e:
+        print(e)
+        print(traceback.print_exc())
     print(content)
-
-    for key in content['data']:
-        val = content['data'][key]
-        val_token = tokenize_data(val)
-        content['data'][key] = val_token
 
     return Response(json.dumps(content), status=201, mimetype='application/json')
 
@@ -88,7 +97,7 @@ def tokenize_data(data):
     """
     """
     # Encrypt data here
-    token = data + 'kk'
+    encrypted_token = encrypt_data(data)
 
     # Connect to mongo database
     mongo_database = get_mongo_database()
@@ -98,7 +107,7 @@ def tokenize_data(data):
     item_to_save = {
         "_id" : uuid.uuid4().hex,
         "value" : data,
-        "token" : token,
+        "token" : encrypted_token,
         "added" : datetime.datetime.now()
     }
     
@@ -107,7 +116,7 @@ def tokenize_data(data):
     except Exception as e:
         print(e)
 
-    return token
+    return encrypted_token
 
 
 def detokenize_data(token):
@@ -124,7 +133,7 @@ def detokenize_data(token):
     try:
         item_details = collection_name.find_one({'token':token})
         print(item_details)
-        val = item_details['value']
+        val = decrypt_data(item_details['token'])
         status = True
     except Exception as e:
         print(e)
@@ -132,4 +141,18 @@ def detokenize_data(token):
         val = ""
 
     return status, val
+
+
+def encrypt_data(data):
+    c = FF3Cipher.withCustomAlphabet(ENCRYPTION_KEY, TWEAK, string.ascii_letters+' ')
+    encrypted_data = c.encrypt(data)
+    return encrypted_data
+
+def decrypt_data(token):
+    try:
+        c = FF3Cipher.withCustomAlphabet(ENCRYPTION_KEY, TWEAK, string.ascii_letters+' ')
+        print(token)
+        return c.decrypt(token)
+    except Exception as e:
+        print(e)
 

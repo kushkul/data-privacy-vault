@@ -1,5 +1,2 @@
-from flask import Flask
-from .views import api_bp
-
-app = Flask(__name__)
-app.register_blueprint(api_bp)
+ENCRYPTION_KEY = "2DE79D232DF5585D68CE47882AE256D6"
+TWEAK = "CBD09280979564"
