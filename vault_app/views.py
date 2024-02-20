@@ -3,7 +3,10 @@ from flask import jsonify, request, send_file, abort
 from flask import Response
 from flask import Blueprint
 import json
-from .mongo_utils import get_mongo_database
+
+from .db import get_mongo_conn
+from mongoengine.connection import disconnect
+
 import datetime
 import string
 import uuid
@@ -100,8 +103,9 @@ def tokenize_data(data):
     encrypted_token = encrypt_data(data)
 
     # Connect to mongo database
-    mongo_database = get_mongo_database()
-    collection_name = mongo_database["data-tokens"]
+    #TODO: Put database connection in context operator
+    conn = get_mongo_conn()
+    collection_name = conn['user-vault-data']['data-tokens']
     
     # Save the items to database
     item_to_save = {
@@ -116,6 +120,7 @@ def tokenize_data(data):
     except Exception as e:
         print(e)
 
+    disconnect('user-vault-data')
     return encrypted_token
 
 
@@ -123,8 +128,9 @@ def detokenize_data(token):
     """
     """
     # Connect to mongo database
-    mongo_database = get_mongo_database()
-    collection_name = mongo_database["data-tokens"]
+    #TODO: Put database connection in context operator
+    conn = get_mongo_conn()
+    collection_name = conn['user-vault-data']['data-tokens']
 
     status = 'Invalid'
     value = 'Invalid'
@@ -139,6 +145,8 @@ def detokenize_data(token):
         print(e)
         status = False
         val = ""
+    
+    disconnect('user-vault-data')
 
     return status, val
 
@@ -147,6 +155,7 @@ def encrypt_data(data):
     c = FF3Cipher.withCustomAlphabet(ENCRYPTION_KEY, TWEAK, string.ascii_letters+' ')
     encrypted_data = c.encrypt(data)
     return encrypted_data
+
 
 def decrypt_data(token):
     try:
