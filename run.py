@@ -2,6 +2,7 @@ from flask import Flask
 from flask import jsonify, request, send_file
 from flask import Response
 from flask_bcrypt import Bcrypt
+from flask_jwt_extended import JWTManager
 import json
 
 from vault_app.views import api_bp
@@ -10,7 +11,11 @@ from vault_app.db import initialize_db
 
 
 app = Flask(__name__)
+#set ENV_FILE_LOCATION=./.env
+app.config.from_envvar('ENV_FILE_LOCATION')
+
 bcrypt = Bcrypt(app)
+jwt = JWTManager(app)
 
 if __name__=='__main__':
     # Adding blueprints
