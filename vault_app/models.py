@@ -1,9 +1,13 @@
-from .db import db
+#from .db import db
 from flask_bcrypt import generate_password_hash, check_password_hash
+from mongoengine import Document, StringField
 
-class User(db.Document):
-    username = db.StringField(required=True, unique=True)
-    password = db.StringField(required=True, min_length=6)
+
+class User(Document):
+    """ Class to store user objects in mongo
+    """
+    username = StringField(required=True, unique=True)
+    password = StringField(required=True, min_length=6)
 
     def hash_password(self):
         """ Function to hash the user password

@@ -23,9 +23,9 @@ api_bp = Blueprint('api', __name__)
 #------------------End points
 
 @api_bp.route('/tokenize', methods=['POST'])
-#@jwt_required
+@jwt_required()
 def tokenize_info():
-    """
+    """ Tokenize the dictionary fields and store them in database
     """
     content = request.json
     try:
@@ -36,19 +36,17 @@ def tokenize_info():
     except Exception as e:
         print(e)
         print(traceback.print_exc())
-    print(content)
 
     return Response(json.dumps(content), status=201, mimetype='application/json')
 
 
 @api_bp.route('/detokenize', methods=['POST'])
-#@jwt_required
+@jwt_required()
 def detokenize_info():
-    """
+    """ Detokenize tokens of the dictionary stored in database
     """
     try:
         content = request.json
-        print(content)
 
         for key in content['data']:
             val_token = content['data'][key]
@@ -63,7 +61,8 @@ def detokenize_info():
 
 
 def tokenize_data(data):
-    """
+    """ tokenize a single data token using FF3Cipher format-preserving
+    encryption and store the tokenized value in database
     """
     # Encrypt data here
     encrypted_token = encrypt_data(data)
@@ -91,7 +90,8 @@ def tokenize_data(data):
 
 
 def detokenize_data(token):
-    """
+    """ Detokenize the encrypted value given input.
+    Returns the detokenized value and success status
     """
     # Connect to mongo database
     #TODO: Put database connection in context operator
@@ -104,7 +104,9 @@ def detokenize_data(token):
     print('Value to find: {}'.format(token))
     try:
         item_details = collection_name.find_one({'token':token})
-        print(item_details)
+        # print(item_details)
+        if item_details is None:
+            raise LookupError('No value found in vault')
         val = decrypt_data(item_details['token'])
         status = True
     except Exception as e:
@@ -126,7 +128,7 @@ def encrypt_data(data):
 def decrypt_data(token):
     try:
         c = FF3Cipher.withCustomAlphabet(ENCRYPTION_KEY, TWEAK, string.ascii_letters+' ')
-        print(token)
+        # print(token)
         return c.decrypt(token)
     except Exception as e:
         print(e)

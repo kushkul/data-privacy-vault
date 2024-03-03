@@ -7,7 +7,7 @@ import json
 
 from vault_app.views import api_bp
 from resources.auth import auth_bp
-from vault_app.db import initialize_db
+#from vault_app.db import initialize_db
 
 
 app = Flask(__name__)
@@ -25,7 +25,7 @@ if __name__=='__main__':
     
     app.config['MONGODB_SETTINGS'] = {'host': 'mongodb://localhost:27017/user-vault-data'
                                       }
-    initialize_db(app)
+    #initialize_db(app)
     app.run(debug=True, port=8000)
 
 
