@@ -23,7 +23,7 @@ def signup_api():
 
     content = {'id':str(user_name)}
 
-    return Response(json.dumps(content), status=200, mimetype='application/json')
+    return Response(json.dumps(content), status=201, mimetype='application/json')
 
 
 @auth_bp.route('/login', methods=['POST'])
